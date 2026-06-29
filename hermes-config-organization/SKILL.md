@@ -1,13 +1,24 @@
 ---
 name: hermes-config-organization
 description: |
-  Hermes Agent 配置三层架构规范——什么内容放 SOUL.md、什么放 .hermes.md、什么放 MEMORY.md，以及搜索规则、遮蔽机制、变更检查清单。
-  当用户问"这个规则放哪里""SOUL.md 该写什么"".hermes.md 和 AGENTS.md 区别""配置怎么组织""SOUL.md 太长了""workflow 该放哪"时触发。
-  也当 agent 需要修改 SOUL.md 或 .hermes.md 时主动加载，确认改动符合分层规范。
-  触发词：SOUL.md 写什么、配置组织、配置分层、hermes-config-organization、workflow 放哪、SOUL.md 滥用、配置最佳实践、.hermes.md 搜索规则、遮蔽机制
+  Hermes 配置分层规范：判断一条规则该放 SOUL.md（身份/语气）、.hermes.md（项目指令）还是 MEMORY.md（会话事实），并给出搜索/优先级/遮蔽机制与"改文件前"检查清单。
+  当用户问"这条规则放哪""SOUL.md 该写什么/太长了"".hermes.md 和 AGENTS.md 区别""配置怎么组织"，或 agent 准备修改 SOUL.md / .hermes.md 时加载。
 ---
 
-# Hermes 配置三层架构
+# Hermes 配置分层规范
+
+> **本文定位**：这里的"三层（stable / context / volatile）"是本 skill 作者对官方文件体系的归纳框架，便于组织配置，**不是 Hermes 官方命名的分类法**。官方将其描述为 SOUL.md（人格）+ MEMORY.md/USER.md（记忆）+ skills + session search。凡标注"（作者经验/推断，非官方约束）"的内容请勿当官方规范引用。参考来源见文末。
+
+## 第一原则：精简优先
+
+配置文件每轮都注入 system prompt、每个字符都占 token 预算，所以**默认倾向是"删"而不是"加"**：
+
+- **一行不改变 agent 行为，就删掉它**（官方 skill 写作规范原则 #1：optimize for process predictability）。
+- 前沿模型可靠遵循约 150–200 条指令，agent harness 本身已占用约 50 条——别用可有可无的规则稀释注意力。
+- **不要写 agent 能自己推断的东西**：目录树（agent 会自己探）、代码风格（交给 linter/formatter）、能从 `package.json`/`pyproject.toml`/`go.mod` 读出的技术栈版本。
+- 实证警告：让 agent 自动生成 context 文件（/init 式）平均**降低任务成功率约 3%、推高成本 20%+**；人工策展也只有约 4% 边际收益。所以**人工策展 + 只写关键信息**，别图省事让 agent 全自动灌内容。
+
+（依据 Hermes 官方 skill authoring 规范、agents.md 生态实践与 ETH Zurich 关于 AGENTS.md 的实证研究，见文末来源。）
 
 ## 三层定义
 
@@ -15,7 +26,7 @@ description: |
 |---|---|---|---|---|
 | **stable** | `SOUL.md` | `HERMES_HOME/SOUL.md` | 每次会话 slot #1 | 身份、语气、风格、铁律 |
 | **context** | `.hermes.md` | CWD 向上搜索到 git root | 会话启动时 | 项目指令、工作流、架构、规范 |
-| **volatile** | `MEMORY.md` / `USER.md` | HERMES_HOME 内部管理 | 每轮动态注入 | 会话级事实、用户偏好 |
+| **volatile** | `MEMORY.md` / `USER.md` | HERMES_HOME 内部管理 | 会话启动时注入（冻结快照，会话中不变） | 会话级事实、用户偏好 |
 
 ### SOUL.md（stable 层）
 
@@ -35,9 +46,9 @@ description: |
 - 基础设施操作规范（Docker/systemd/cron 细节）
 - Hindsight/API 调用代码示例
 
-**判断标准：** 如果一条规则只在你"工作中枢"角色下生效，不管哪个项目，不管什么任务 → SOUL.md。如果只对某个项目或某类操作生效 → `.hermes.md`。
+**判断标准：** 如果一条规则只在你"工作中枢"角色下生效，不管哪个项目、不管什么任务 → SOUL.md。如果只对某个项目或某类操作生效 → `.hermes.md`。
 
-**字数建议：** < 2,000 字符。SOUL.md 越短，身份锚定越强。超过 2,000 字符说明你在往里塞 workflow。
+**字数建议：** < 2,000 字符。SOUL.md 越短，身份锚定越强。超过 2,000 字符通常说明你在往里塞 workflow。（作者经验/推断，非官方约束：官方未对 SOUL.md 单独设限，它和其他 context 文件一样在 `context_file_max_chars`（默认 20,000 字符）处截断。2,000 字符只是本 skill 推荐的身份锚定经验值。）
 
 ### .hermes.md（context 层）
 
@@ -55,6 +66,7 @@ description: |
 **不写：**
 - 身份和语气（→ SOUL.md）
 - 会话级动态数据（→ MEMORY.md）
+- agent 能自己推断的（目录树、可由 linter 管的风格、可从 manifest 读出的技术栈）
 
 **搜索规则（关键）：**
 
@@ -63,11 +75,12 @@ description: |
 3. 如果 CWD 不在 git 仓库内，一直走到文件系统根 `/`
 4. **first match wins**——找到第一个就返回，不继续向上找
 5. 优先级：`.hermes.md` > `AGENTS.md` > `CLAUDE.md` > `.cursorrules`（只加载一种）
+6. **作用域差异（重要）**：只有 `.hermes.md`/`HERMES.md` 会向上走到 git root；`AGENTS.md`/`CLAUDE.md`/`.cursorrules` 在**启动时只读 CWD**，既不向上走 git root、也不读子目录（子目录的 `AGENTS.md` 仅在会话中进入该目录读写文件时被惰性发现并注入工具结果，每个上限 8,000 字符）。这一行为已由官方《Project Context Files》文档与 hermes-agent issue #21686 证实（社区正讨论是否让 `AGENTS.md` 也走到 git root；当前**未**这样做）。
 
 **遮蔽机制（关键）：**
 
 - 项目级 `.hermes.md` 一旦存在，**完全遮蔽** `~/.hermes.md`——全局规则在项目目录下不可见
-- `.hermes.md` 一旦存在，也**完全遮蔽** `AGENTS.md`——两者不会同时加载
+- 启动时只加载一种 project context（first match wins），所以 `.hermes.md` 存在时**启动阶段不会同时加载** `AGENTS.md`。**但注意**：会话过程中 agent 进入子目录读写文件时，Hermes 会**渐进式发现并加载子目录里的** `AGENTS.md`/`CLAUDE.md`/`.cursorrules`（每个上限 8,000 字符），因此根目录 `.hermes.md` 与子目录 `AGENTS.md` 可能**同时**存在于上下文。"`.hermes.md` 完全遮蔽 AGENTS.md"只在启动阶段、同一目录层级成立。
 - git root 是硬停止点：CWD 在 git 项目内且项目没有 `.hermes.md` 时，搜索在 git root 停止，**不会回退到** `~/.hermes.md`
 
 **截断上限：** 20,000 字符。超了保留头部 70% + 尾部 20%，中间 10% 被丢弃。建议控制在 6,000 字符以内。
@@ -75,7 +88,7 @@ description: |
 ### MEMORY.md / USER.md（volatile 层）
 
 **写什么：**
-- 用户偏好和习惯（会话级注入，每轮都能看到）
+- 用户偏好和习惯（会话启动时作为冻结快照注入，整段会话可见，但会话中不随每轮变化——本轮写入要下次会话才进入系统提示）
 - 环境事实（OS、工具路径、版本）
 - 纠错记录（用户纠正过的行为）
 
@@ -83,15 +96,17 @@ description: |
 - 可从文件推断的环境信息
 - 7 天后会过期的临时状态（任务进度、PR 编号、commit SHA）
 
-**字数限制：** ~2,200 字符。超过会被截断。
+**字数限制：** MEMORY.md ~2,200 字符（~800 tokens），USER.md ~1,375 字符（~500 tokens），是两个独立上限。**注意：内存不会自动截断**——当写入会超限时，`memory` 工具会**返回错误**，要求 agent 在同一轮内先用 `replace` 合并、或 `remove` 删除旧条目腾出空间再重试，而不是静默砍掉内容（"头部 70% + 尾部 20%"的截断规则只适用于 `.hermes.md`/`AGENTS.md` 这类 context 文件，不适用于 MEMORY/USER）。
 
 ## 全局 vs 项目级 .hermes.md
+
+> 作者经验/推断，非官方约束：官方文档并未把 `~/.hermes.md` 命名为一个"全局配置"特性。它能生效，是"`.hermes.md` 向上搜索到 git root；若 CWD 不在任何 git 仓库内则一直走到文件系统根"这条搜索规则的副产物——只有当 CWD 不在任何 git 仓库内（例如就在 `~/` 下）时才会命中 `~/.hermes.md`。下面的"全局兜底"架构是基于这一机制的设计主张。
 
 ### 推荐架构
 
 ```
 ~/.hermes.md                    ← 全局兜底（跨项目生效的工作流）
-~/Github/some-project/
+~/projects/your-project/        ← 示例路径
   └── .hermes.md                ← 项目级（遮蔽全局）
 ```
 
@@ -120,8 +135,9 @@ description: |
 ### 改 .hermes.md 前问自己
 
 1. **这是项目级规则，还是全局的？** → 全局规则放 `~/.hermes.md`
-2. **总字数是否接近 6,000？** → 超了考虑拆到 skill 或 reference 文件
-3. **如果这是项目级改动，全局规则有没有被遮蔽？** → 走 `hermes-md-init` Step 3.5 继承检查
+2. **这条 agent 能自己推断吗？** → 能（目录树/风格/manifest 里的技术栈）就删
+3. **总字数是否接近 6,000？** → 超了考虑拆到 skill 或 reference 文件
+4. **如果这是项目级改动，全局规则有没有被遮蔽？** → 走 `hermes-md-init` Step 3.5 继承检查
 
 ### 改 MEMORY.md 前问自己
 
@@ -134,4 +150,12 @@ description: |
 2. **项目级 `.hermes.md` 不继承全局** — 建了项目级就忘了搬全局的关键规则。
 3. **以为 `.hermes.md` 会回退到 `~/`** — 不会。git root 是硬墙。
 4. **MEMORY.md 写指令** — "运行测试用 pytest -n 4"是指令不是事实，应该写进 `.hermes.md` 或 skill。
-5. **SOUL.md 写具体路径** — `/home/luo/.hermes/scripts/` 这种路径放 skill 或 `.hermes.md`，不放心层。
+5. **SOUL.md 写具体路径** — `~/.hermes/scripts/` 这种路径放 skill 或 `.hermes.md`，不放身份层。
+6. **把能推断的也写进去** — 目录树、代码风格、manifest 里的技术栈，写了只是增加 token、稀释注意力。
+
+## 参考来源
+
+- Hermes 官方文档（hermes-agent.nousresearch.com/docs）：《Context Files》《Project Context Files》《Personality & SOUL.md》《Tips & Best Practices》《Skill Authoring》写作质量原则
+- hermes-agent 仓库（github.com/NousResearch/hermes-agent）：issue #681（.hermes.md 提案）、issue #21686（AGENTS.md 是否走 git root 的讨论）
+- AGENTS.md 标准与实践：agents.md；Philschmid《Writing a Good AGENTS.md》；ETH Zurich 实证研究《On the Impact of AGENTS.md Files on the Efficiency of AI Coding Agents》(arXiv 2601.20404)
+- skill 写作实践：Claude Platform《Skill authoring best practices》；github.com/mgechev/skills-best-practices
