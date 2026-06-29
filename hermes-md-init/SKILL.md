@@ -11,7 +11,7 @@ description: |
 
 `.hermes.md` 是 Hermes 的**项目级指令文件**，注入 system prompt 的 context 层。它告诉 agent 这个项目的架构、规范、约束。
 
-**搜索规则**：从 CWD 向上搜索到 git root，就近命中。`~/.hermes.md` 是全局兜底。项目级 `.hermes.md` 遮蔽全局的。
+**搜索规则**：从 CWD 向上搜索到 git root，就近命中。`~/.hermes.md` 是全局兜底（注：非官方命名特性，仅在 CWD 不在任何 git 仓库内时才会命中，详见 `hermes-config-organization`）。项目级 `.hermes.md` 遮蔽全局的。
 
 **优先级**：`.hermes.md` > `AGENTS.md` > `CLAUDE.md` > `.cursorrules`（first match wins）
 
@@ -63,7 +63,7 @@ description: |
 3. 以下规则段**可选**保留（看项目是否相关）：
    - 基础设施维护职责
    - 情报采集职责
-4. 如果项目有独立 AGENTS.md，也要把 AGENTS.md 的关键约束搬进 `.hermes.md`（因为 `.hermes.md` 一旦建立，AGENTS.md 不会被加载）
+4. 如果项目有独立 AGENTS.md，也要把 AGENTS.md 的关键约束搬进 `.hermes.md`（因为 `.hermes.md` 一旦建立，启动阶段同一层级的 AGENTS.md 不会被加载）
 5. **写入后读回文件，验证以下段落存在**：☐ Hindsight retain infra_state 触发条件和格式 ☐ 工作流程路由（如适用）。缺失则补写。
 
 写入 `{project_root}/.hermes.md`，告诉用户文件已创建，列出关键内容。
@@ -173,8 +173,8 @@ description: |
 1. **不要写太长** — 20,000 字符上限，但实际超过 5,000 字符就该考虑精简。中间内容会被截断丢弃。
 2. **不要复制全局规范** — `~/.hermes.md` 已有的规则不要重复写。（但注意：项目级会遮蔽全局，关键规则必须继承，见 Step 3.5）
 3. **不要写"be helpful"之类的废话** — agent 默认就会做。
-4. **YAML frontmatter 会被剥离** — 如果用 `---` 分隔的 frontmatter，内容会被丢弃。直接写 markdown body。
+4. **YAML frontmatter 是否会被剥离（待实测，官方文档未说明）** — 有观点认为 `.hermes.md` 顶部用 `---` 包裹的 frontmatter 会被丢弃。官方 Context Files 文档对此**无明确说明**，请以实测为准；保险起见，直接写 markdown body，不要把关键指令放进 frontmatter。
 5. **项目级遮蔽全局** — 一旦建了项目级 `.hermes.md`，全局的就不会被加载。必须走 Step 3.5 继承检查。
-6. **AGENTS.md 也会被遮蔽** — `.hermes.md` 优先级高于 AGENTS.md，first match wins。如果项目已有 AGENTS.md，建 `.hermes.md` 时要把 AGENTS.md 的关键约束搬过来。
-7. **git submodule 独立搜索** — submodule 有自己的 `.git`，搜索会在 submodule 根停止，不会走到父仓库。每个 submodule 需要独立的 `.hermes.md`。
+6. **AGENTS.md 也会被遮蔽（启动阶段、同层级）** — `.hermes.md` 优先级高于 AGENTS.md，first match wins。如果项目已有 AGENTS.md，建 `.hermes.md` 时要把 AGENTS.md 的关键约束搬过来。注意：会话中进入子目录时，子目录的 AGENTS.md 仍可能被渐进式加载。
+7. **git submodule 独立搜索（作者推断，非官方明文）** — submodule 有自己的 `.git`，由"搜索到 git root 停止"规则外推，搜索应会在 submodule 根停止、不走到父仓库，因此每个 submodule 可能需要独立的 `.hermes.md`。官方未单独文档化 submodule 行为，请以实测为准。
 8. **git root 截断不回退** — 如果 CWD 在 git 仓库内且项目没有 `.hermes.md`，搜索在 git root 停止，**不会回退到 `~/.hermes.md`**。这是 Step 3.5 存在的原因。

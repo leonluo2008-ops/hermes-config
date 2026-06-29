@@ -9,13 +9,15 @@ description: |
 
 # Hermes 配置三层架构
 
+> 说明：本文的"三层架构（stable / context / volatile）"是本 skill 作者对官方文件体系的归纳框架，便于组织配置；它不是 Hermes 官方命名的分类法。官方将记忆体系描述为 SOUL.md（人格）+ MEMORY.md/USER.md（记忆）+ skills + session search。下面凡标注"（作者经验/推断，非官方约束）"的内容，请勿当作官方规范引用。
+
 ## 三层定义
 
 | 层 | 文件 | 位置 | 注入时机 | 写什么 |
 |---|---|---|---|---|
 | **stable** | `SOUL.md` | `HERMES_HOME/SOUL.md` | 每次会话 slot #1 | 身份、语气、风格、铁律 |
 | **context** | `.hermes.md` | CWD 向上搜索到 git root | 会话启动时 | 项目指令、工作流、架构、规范 |
-| **volatile** | `MEMORY.md` / `USER.md` | HERMES_HOME 内部管理 | 每轮动态注入 | 会话级事实、用户偏好 |
+| **volatile** | `MEMORY.md` / `USER.md` | HERMES_HOME 内部管理 | 会话启动时注入（冻结快照，会话中不变） | 会话级事实、用户偏好 |
 
 ### SOUL.md（stable 层）
 
@@ -37,7 +39,7 @@ description: |
 
 **判断标准：** 如果一条规则只在你"工作中枢"角色下生效，不管哪个项目，不管什么任务 → SOUL.md。如果只对某个项目或某类操作生效 → `.hermes.md`。
 
-**字数建议：** < 2,000 字符。SOUL.md 越短，身份锚定越强。超过 2,000 字符说明你在往里塞 workflow。
+**字数建议：** < 2,000 字符。SOUL.md 越短，身份锚定越强。超过 2,000 字符说明你在往里塞 workflow。（作者经验/推断，非官方约束：官方未对 SOUL.md 单独设限，它和其他 context 文件一样在 `context_file_max_chars`（默认 20,000 字符）处截断。2,000 字符只是本 skill 推荐的身份锚定经验值。）
 
 ### .hermes.md（context 层）
 
@@ -67,7 +69,7 @@ description: |
 **遮蔽机制（关键）：**
 
 - 项目级 `.hermes.md` 一旦存在，**完全遮蔽** `~/.hermes.md`——全局规则在项目目录下不可见
-- `.hermes.md` 一旦存在，也**完全遮蔽** `AGENTS.md`——两者不会同时加载
+- 启动时只加载一种 project context（first match wins），所以 `.hermes.md` 存在时**启动阶段不会同时加载** `AGENTS.md`。**但注意**：会话过程中 agent 进入子目录读写文件时，Hermes 会**渐进式发现并加载子目录里的** `AGENTS.md`/`CLAUDE.md`/`.cursorrules`（每个上限 8,000 字符），因此根目录 `.hermes.md` 与子目录 `AGENTS.md` 可能**同时**存在于上下文。"`.hermes.md` 完全遮蔽 AGENTS.md"只在启动阶段、同一目录层级成立。
 - git root 是硬停止点：CWD 在 git 项目内且项目没有 `.hermes.md` 时，搜索在 git root 停止，**不会回退到** `~/.hermes.md`
 
 **截断上限：** 20,000 字符。超了保留头部 70% + 尾部 20%，中间 10% 被丢弃。建议控制在 6,000 字符以内。
@@ -75,7 +77,7 @@ description: |
 ### MEMORY.md / USER.md（volatile 层）
 
 **写什么：**
-- 用户偏好和习惯（会话级注入，每轮都能看到）
+- 用户偏好和习惯（会话启动时作为冻结快照注入，整段会话可见，但会话中不随每轮变化——本轮写入要下次会话才进入系统提示）
 - 环境事实（OS、工具路径、版本）
 - 纠错记录（用户纠正过的行为）
 
@@ -83,9 +85,11 @@ description: |
 - 可从文件推断的环境信息
 - 7 天后会过期的临时状态（任务进度、PR 编号、commit SHA）
 
-**字数限制：** ~2,200 字符。超过会被截断。
+**字数限制：** MEMORY.md ~2,200 字符（~800 tokens），USER.md ~1,375 字符（~500 tokens），是两个独立上限。**注意：内存不会自动截断**——当写入会超限时，`memory` 工具会**返回错误**，要求 agent 在同一轮内先用 `replace` 合并、或 `remove` 删除旧条目腾出空间再重试，而不是静默砍掉内容（"头部 70% + 尾部 20%"的截断规则只适用于 `.hermes.md`/`AGENTS.md` 这类 context 文件，不适用于 MEMORY/USER）。
 
 ## 全局 vs 项目级 .hermes.md
+
+> 作者经验/推断，非官方约束：官方文档并未把 `~/.hermes.md` 命名为一个"全局配置"特性。它能生效，是"`.hermes.md` 向上搜索到 git root；若 CWD 不在任何 git 仓库内则一直走到文件系统根"这条搜索规则的副产物——只有当 CWD 不在任何 git 仓库内（例如就在 `~/` 下）时才会命中 `~/.hermes.md`。下面的"全局兜底"架构是基于这一机制的设计主张。
 
 ### 推荐架构
 
