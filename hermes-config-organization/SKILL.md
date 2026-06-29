@@ -106,7 +106,7 @@ description: |
 
 ```
 ~/.hermes.md                    ← 全局兜底（跨项目生效的工作流）
-~/Github/some-project/
+~/projects/your-project/        ← 示例路径
   └── .hermes.md                ← 项目级（遮蔽全局）
 ```
 
@@ -150,7 +150,7 @@ description: |
 2. **项目级 `.hermes.md` 不继承全局** — 建了项目级就忘了搬全局的关键规则。
 3. **以为 `.hermes.md` 会回退到 `~/`** — 不会。git root 是硬墙。
 4. **MEMORY.md 写指令** — "运行测试用 pytest -n 4"是指令不是事实，应该写进 `.hermes.md` 或 skill。
-5. **SOUL.md 写具体路径** — `/home/luo/.hermes/scripts/` 这种路径放 skill 或 `.hermes.md`，不放身份层。
+5. **SOUL.md 写具体路径** — `~/.hermes/scripts/` 这种路径放 skill 或 `.hermes.md`，不放身份层。
 6. **把能推断的也写进去** — 目录树、代码风格、manifest 里的技术栈，写了只是增加 token、稀释注意力。
 
 ## 参考来源
