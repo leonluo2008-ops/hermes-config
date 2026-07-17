@@ -152,6 +152,52 @@ description: |
 4. **MEMORY.md 写指令** — "运行测试用 pytest -n 4"是指令不是事实，应该写进 `.hermes.md` 或 skill。
 5. **SOUL.md 写具体路径** — `~/.hermes/scripts/` 这种路径放 skill 或 `.hermes.md`，不放身份层。
 6. **把能推断的也写进去** — 目录树、代码风格、manifest 里的技术栈，写了只是增加 token、稀释注意力。
+7. **已有优质 CLAUDE.md 再建 .hermes.md** — 项目已有完善的 `CLAUDE.md`（或 `AGENTS.md`）且内容完整时，再建 `.hermes.md` 只是冗余（first match wins，两个文件写两遍）。此时不建——Hermes 已能自动发现并加载 `CLAUDE.md`。只有当 `CLAUDE.md` 缺少 Hermes 特有约束（如路由规则、Hindsight 协议）且需要从 `~/.hermes.md` 继承时，才值得建 `.hermes.md`。
+
+## 用户级持久配置黑名单 — 未经 ask 不能 patch
+
+**主 agent 不允许**在缺少用户明确授权下，自己 `patch` / `write_file` 以下任何文件。绕过的常见理由是 "持久化机制为 0 / 必须立刻执行 / 不然下次会话就崩" — 这些理由全部不成立，因为**用户对配置的 ownership > 主 agent 自己判断该改**。
+
+**触发案例**（2026-07-09 harness）：主 agent 在子 agent 审计报告建议加 SOUL 铁律 8 后，未经 `clarify` 直接 `patch ~/.hermes/SOUL.md`，用户反应 "停！丢弃你所有修改，我对你完全不信任了"，所有持久配置回滚。
+
+### 黑名单清单
+
+| 文件路径 | 用途 | 主 agent 权限 |
+|---|---|---|
+| `~/.hermes/SOUL.md` | 身份/铁律/风格 | ❌ 必须 clarify |
+| `~/.hermes.md` | 全局用户指令 | ❌ 必须 clarify |
+| `~/.hermes/MEMORY.md` | 内置长记忆 | ❌ 必须 clarify（且满了就报，不写) |
+| `~/.hermes/config.yaml` | 运行时配置 | ❌ 除显式调试 session 外必须 clarify |
+| `~/.hermes/cron/jobs.json` | 定时任务 | ❌ 必须 clarify |
+| `~/.hermes/skills/*/SKILL.md` | skill 定义 | ❌ 必须 clarify（写入新 skill 也要) |
+| `~/.hermes/profiles/*/config.yaml` | profile 配置 | ❌ 必须 clarify |
+| `~/.hermes/profiles/*/MEMORY.md` | profile 长记忆 | ❌ 必须 clarify |
+
+**未列入清单的文件**（如 `~/.hermes/harness/`、`/tmp/*.md`、项目内文件）：主 agent 可以动，但每次动完要 grep 验证（铁律 6 WRITE-VERIFY）。
+
+### Ask 模板
+
+`clarify` 时给 3-4 选项，让用户拍板：
+
+```
+您级持久配置改动建议 (来源: 子 agent / 自检 / 用户指令):
+
+目标文件: ~/.hermes/SOUL.md
+建议内容: 加铁律 8 (Harness 协议触发)
+理由: 子 agent 审计报告建议
+
+选项:
+A) 我执行 patch (您审核 commit diff 后合)
+B) 您自己改 (我提供 diff)
+C) 暂不持久化 (先跑 v8 看一周, 痛点真出现再改)
+D) 改成写到 .hermes.md (lower-tier, git repo CWD 下不生效)
+```
+
+不允许默认动作是 A. 任何 patch 之前必须先收一个用户回复。
+
+### 例外
+
+用户在当前 turn 明确说 "改 SOUL" / "patch 一下 X" / "加这条铁律" → 当次 turn 算授权。下 turn 再改同样的 = 必须重新 clarify。
 
 ## 参考来源
 
