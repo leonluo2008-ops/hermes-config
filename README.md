@@ -6,10 +6,12 @@ Hermes Agent 配置管理套件 — 2 个配套 skill，规范 SOUL.md / .hermes
 
 | Skill | 用途 |
 |---|---|
-| `hermes-config-organization` | 三层配置架构规范——什么内容放哪个文件、搜索/优先级/遮蔽机制、变更检查清单 |
+| `hermes-config-organization` | 三层配置架构规范 + **配置协作协议**（自检/路由/复盘）——什么内容放哪个文件、搜索/优先级/遮蔽机制、变更检查清单、信息路由决策树 |
 | `hermes-md-init` | 项目级 `.hermes.md` 人工策展式初始化——采集非显然信息 → 选骨架逐段填充 → 强制继承全局规则（Step 3.5）→ 写入读回验证。含确定性自动触发机制 |
 
 两个 skill 配合使用：`hermes-config-organization` 定义"应该怎样"，`hermes-md-init` 执行"具体怎么做"。
+
+**配套插件**：`config-advisor`（开发中）将自动执行配置自检、信息路由建议和会话复盘。通过 `./install.sh --plugins` 安装。
 
 ## 通用性说明（先读这个）
 
@@ -22,18 +24,22 @@ Hermes Agent 配置管理套件 — 2 个配套 skill，规范 SOUL.md / .hermes
 
 ## 安装
 
-### 1. 获取仓库
+### 一键安装（推荐）
 
 ```bash
 git clone https://github.com/leonluo2008-ops/hermes-config.git
 cd hermes-config
+
+# 只安装 skills
+./install.sh
+
+# 同时安装 config-advisor 插件（仅 Hermes，需 --plugins 显式 opt-in）
+./install.sh --plugins
 ```
 
-（或下载 zip 解压后进入该目录。）
+### 手动安装
 
-### 2. 复制到你所用 agent 的 skills 目录
-
-把 `hermes-config-organization/` 和 `hermes-md-init/` 两个目录整体复制过去。各系统位置：
+把 `hermes-config-organization/` 和 `hermes-md-init/` 两个目录整体复制到你的 skills 目录：
 
 | 系统 | 全局 skills 目录 | 项目级 skills 目录 |
 |---|---|---|
@@ -97,5 +103,6 @@ volatile 层 MEMORY.md/USER.md 会话级动态数据
 
 ## 变更日志
 
+- **v3** (2026-07-17): hermes-config-organization 新增"配置协作协议"——信息路由决策树（正文精简版 + 完整 reference）、配置自检协议（7 项确定性检查）、项目工作流复盘（3 种触发方式）；3 个新 references 文件；install.sh 一键安装脚本
 - **v2** (2026-07-17): hermes-md-init 重写为人工策展式；Step 3.5 继承清单补充"关键原则"；加确定性自动触发机制（`~/.hermes.md` 项目自检行）；模板拆分到 `templates/` 目录
 - **v1** (2026-07-12): 初始发布 — hermes-config-organization + hermes-md-init
