@@ -1,0 +1,8 @@
+name: config-advisor
+version: "0.1.0"
+description: "Configuration health monitor and advisor for Hermes Agent. Checks config file health (sizes, existence, capacity), advises on information routing (where new facts should go), and produces session-end retrospectives via async LLM analysis. Designed to work alongside harness-guard (observer-only, never blocks)."
+author: "user"
+hooks:
+  - pre_llm_call
+  - post_tool_call
+  - on_session_finalize
