@@ -11,7 +11,32 @@ Hermes Agent 配置管理套件 — 2 个配套 skill，规范 SOUL.md / .hermes
 
 两个 skill 配合使用：`hermes-config-organization` 定义"应该怎样"，`hermes-md-init` 执行"具体怎么做"。
 
-**配套插件**：`config-advisor`（开发中）将自动执行配置自检、信息路由建议和会话复盘。通过 `./install.sh --plugins` 安装。
+**配套插件**：`config-advisor` 自动执行配置自检、信息路由建议和会话复盘。通过 `./install.sh --plugins` 安装。
+
+## 开发调试流程（重要）
+
+> 本仓库**不是运行目录**，是开发仓库。`install.sh` 用 `cp -r` 把文件**复制**到运行目录（`install.sh:25,46`），不是软链。两边是独立副本。
+
+| 角色 | 路径 | 说明 |
+|------|------|------|
+| **开发仓库**（改代码的地方） | `~/Github/hermes-config/` | git repo，remote = `leonluo2008-ops/hermes-config`（`git remote -v` 验证）|
+| **运行目录**（Hermes 实际加载） | `~/.hermes/skills/*` + `~/.hermes/plugins/config-advisor` | `install.sh` 复制过去的 |
+| **安装方式** | `install.sh` 用 `cp -r`（L25, L46） | 复制，非软链 |
+
+**正确流程**（三步，缺一不可）：
+1. 在 `~/Github/hermes-config/` 改代码 → `git commit && git push`
+2. `./install.sh` 或 `cp -r config-advisor/ ~/.hermes/plugins/`（skill 同理）同步到运行目录
+3. 外部终端 `hermes gateway restart` 才生效（`hermes gateway --help` 确认 restart 子命令存在）
+
+**⚠️ 坑**：直接改 `~/.hermes/plugins/config-advisor/` 的文件，仓库不会变——下次 `install.sh` 或 `git pull` 会覆盖你的改动。**改代码永远在仓库**。
+
+**验证两边一致**：
+```bash
+diff ~/Github/hermes-config/config-advisor/health_check.py ~/.hermes/plugins/config-advisor/health_check.py
+# 无输出 = 一致
+```
+
+> 对比：`harness-guard` 插件是"运行目录=开发目录=git repo"的单段式模式（`~/.hermes/plugins/harness-guard/` 自己就是 git repo，remote 指向 `hermes-plugin-harness-guard`）。本仓库不同，是双段式。
 
 ## 通用性说明（先读这个）
 
