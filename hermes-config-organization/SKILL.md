@@ -286,7 +286,3 @@ config-advisor 插件（`~/.hermes/plugins/config-advisor/`）自动化上述三
 | `on_session_finalize` | 真实会话结束 → 异步 LLM 分析 | **不是 on_session_end**（那个是 per-turn `turn_finalizer.py:490`）；先快照数据再开线程 |
 
 安装见仓库 README 的 `./install.sh --plugins`。
-
-## 本套 skill 的 GitHub 同步
-
-本套 skill（`hermes-config-organization` + `hermes-md-init`）有 GitHub 镜像仓库 `leonluo2008-ops/hermes-config`。本地 skill 改完后需同步到远程，同步流程见 `references/local-to-github-sync.md`。

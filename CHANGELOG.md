@@ -13,6 +13,9 @@
 
 ## [Unreleased]
 
+### Removed
+- `references/local-to-github-sync.md`：描述的"运行目录→镜像仓库"三段式同步模式与项目实际不符（项目是 promotion 模式：仓库→运行目录），同步清除 SKILL.md L290-292 的悬空引用段
+
 ### Added
 - `.hermes.md` 项目级指令文件（人工策展式初始化，含开发铁律/版本维护/登记清单）
 - `CHANGELOG.md` 本文件
