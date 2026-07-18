@@ -1,7 +1,7 @@
 # config-advisor 保姆级开发与使用文档
 
 > **版本**：v0.1.1（2026-07-18，修复字节/字符 bug 后）
-> **配套 Skill**：`hermes-config-organization` v3+
+> **配套 Skill**：`hermes-config-organization` v4+
 > **仓库**：https://github.com/leonluo2008-ops/hermes-config
 
 ---
