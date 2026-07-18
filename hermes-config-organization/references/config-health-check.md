@@ -95,7 +95,7 @@ echo -e "配置健康检查：\n$REPORT"
 
 ## 插件自动模式（config-advisor pre_llm_call）
 
-插件在 `pre_llm_call` hook 中用 Python `os.path.exists()` + `os.path.getsize()` 执行同样检查。
+插件在 `pre_llm_call` hook 中用 Python `path.read_text()` + `len()` 执行同样检查（字符数，非字节）。
 
 **关键约束**：
 - **is_first_turn gate**：只在 `kwargs.get("is_first_turn") == True` 时执行完整检查。非首轮只做增量检查（如果 agent 刚写了配置文件）。
