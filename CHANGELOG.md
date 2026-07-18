@@ -13,42 +13,40 @@
 
 ## [Unreleased]
 
-### Removed
-- `references/local-to-github-sync.md`：描述的"运行目录→镜像仓库"三段式同步模式与项目实际不符（项目是 promotion 模式：仓库→运行目录），同步清除 SKILL.md L290-292 的悬空引用段
-
-### Added
-- `.hermes.md` 项目级指令文件（人工策展式初始化，含开发铁律/版本维护/登记清单）
-- `CHANGELOG.md` 本文件
-- `config-advisor/requirements.txt`（httpx 依赖声明，运行时由 hermes venv 提供）
-
-### Changed
-- `install.sh`：删除 config-advisor 未发布的 dead code 判断；echo 出的 Python 启用脚本改用 `os.path.expanduser` 通用化路径；删除误导性注释
-- `config-advisor/plugin.yaml`：version 0.1.0 → 0.1.1（追平 GUIDE.md L3）
-
-### Fixed
-- 通用性整改：清除仓库内 17 处本机硬编码路径
-  - README.md 3 处 `~/Github/` → `<your-repo-dir>/`
-  - GUIDE.md 5 处 `/home/luo/` + `~/Github/` → `~/.hermes/` / `os.path.expanduser` / `<your-repo-dir>`
-  - local-to-github-sync.md 7 处 `~/Github/` → `<your-repo-dir>/`
-  - SKILL.md 2 处 `/home/luo/` → `os.path.expanduser('~/.hermes.md')`（保语义不删段）
+（下次发布的内容将在此累积）
 
 ---
 
 ## [skill v4.0] - 2026-07-18
 
+本次发布是项目初始化整改：通用化、版本维护基建、配置完整性核查、本地→GitHub 同步模式修正。
+
 ### Added
-- `.hermes.md` 项目级指令（通用性铁律 / 版本维护规则 / 登记清单 / 新机器初始化 6 步）
-- `CHANGELOG.md` 版本维护基建
-- `config-advisor/requirements.txt` 依赖声明
+- `.hermes.md` 项目级指令文件（人工策展式初始化，含开发铁律/版本维护规则/登记清单/新机器初始化 6 步）
+- `CHANGELOG.md` 版本维护基建（Keep a Changelog 格式，skill + plugin 双 section）
+- `config-advisor/requirements.txt`（httpx 依赖声明，运行时由 hermes venv 提供）
 - `config-advisor/docs/GUIDE.md` 保姆级开发与使用文档（13 章节，616 行）
+- `scripts/verify-integration.sh` 集成验证脚本（46 项检查：L1 静态 + L2 单元 + L3 集成）
 
 ### Changed
-- `install.sh` 通用化（删 dead code、修 $HOME 展开问题、echo 脚本改 expanduser）
-- `README.md` 加"开发调试流程"段（双段式开发约定）
+- `install.sh`：删除 config-advisor 未发布的 dead code 判断；echo 出的 Python 启用脚本改用 `os.path.expanduser` 通用化路径；删除误导性注释；L58 `$HOME` 在双引号 echo 里会展开成绝对路径，改为不展开的字面提示
+- `config-advisor/plugin.yaml`：version 0.1.0 → 0.1.1（追平 GUIDE.md L3，patch：仅文档/版本号对齐无 hook 逻辑变化）
+- `README.md`：清除 3 处 `~/Github/` 硬编码；合并前置要求段（httpx + Python 3.11+ + agentskills.io 标准）
+- `GUIDE.md`：清除 5 处硬编码路径；L4 配套 skill 版本号 `v3+` → `v4+`；§5 前置条件改 `pip install httpx` → "Hermes venv 已提供"
+- `SKILL.md`：L217-219 harness-guard workaround 可执行片段 `/home/luo/` → `os.path.expanduser('~/.hermes.md')`（terminal python3 -c 不展开 ~）
 
 ### Fixed
-- `health_check.py` 字节口径 → 字符口径（`stat().st_size` → `len(read_text())`，中文 UTF-8 虚高 1.9 倍）
-- 17 处本机硬编码路径清理（见 Unreleased.Fixed 详列）
+- 通用性整改：清除仓库内 17 处本机硬编码路径（README 3 + GUIDE 5 + local-to-github-sync 7 + SKILL 2）
+- `.env.example` 完整性核查：代码实际读取 11 个 env 变量（grep `os.environ.get` + `os.getenv` 实测），补 5 个缺失字段（HERMES_HOME + 4 个 fallback API key）
+
+### Removed
+- `references/local-to-github-sync.md`：描述的"运行目录→镜像仓库"三段式同步模式与项目实际不符（项目是 promotion 模式：仓库→运行目录），同步清除 SKILL.md L290-292 的悬空引用段
+
+### Known Issues（本次不修，单独 issue 跟踪）
+- `SOUL.md` 2044 字符超 2000 上限（workflow 段应移到 .hermes.md）
+- `MEMORY.md` 2173/2200（98%）接近上限
+- `USER.md` 1242/1375（90%）接近上限
+- 这三项是配置内容问题不是代码问题，合并到 main 不会让它们变差，但 config-advisor 的 `pre_llm_call` hook 会在每次新会话注入这个警告
 
 ---
 
