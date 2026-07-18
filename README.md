@@ -19,12 +19,12 @@ Hermes Agent 配置管理套件 — 2 个配套 skill，规范 SOUL.md / .hermes
 
 | 角色 | 路径 | 说明 |
 |------|------|------|
-| **开发仓库**（改代码的地方） | `~/Github/hermes-config/` | git repo，remote = `leonluo2008-ops/hermes-config`（`git remote -v` 验证）|
+| **开发仓库**（改代码的地方） | `<your-repo-dir>/hermes-config/` | git repo，remote = `leonluo2008-ops/hermes-config`（`git remote -v` 验证）|
 | **运行目录**（Hermes 实际加载） | `~/.hermes/skills/*` + `~/.hermes/plugins/config-advisor` | `install.sh` 复制过去的 |
 | **安装方式** | `install.sh` 用 `cp -r`（L25, L46） | 复制，非软链 |
 
 **正确流程**（三步，缺一不可）：
-1. 在 `~/Github/hermes-config/` 改代码 → `git commit && git push`
+1. 在 `<your-repo-dir>/hermes-config/` 改代码 → `git commit && git push`
 2. `./install.sh` 或 `cp -r config-advisor/ ~/.hermes/plugins/`（skill 同理）同步到运行目录
 3. 外部终端 `hermes gateway restart` 才生效（`hermes gateway --help` 确认 restart 子命令存在）
 
@@ -32,7 +32,7 @@ Hermes Agent 配置管理套件 — 2 个配套 skill，规范 SOUL.md / .hermes
 
 **验证两边一致**：
 ```bash
-diff ~/Github/hermes-config/config-advisor/health_check.py ~/.hermes/plugins/config-advisor/health_check.py
+diff <your-repo-dir>/hermes-config/config-advisor/health_check.py ~/.hermes/plugins/config-advisor/health_check.py
 # 无输出 = 一致
 ```
 
