@@ -22,6 +22,18 @@ mkdir -p "$SKILLS_DIR"
 
 for skill in hermes-config-organization hermes-md-init; do
     if [ -d "$REPO_DIR/$skill" ]; then
+        # 同步删除：清理目标里仓库已删除的文件（cp -r 只加不删的盲区）
+        if [ -d "$SKILLS_DIR/$skill" ]; then
+            # 找出目标有但仓库没有的文件，删掉
+            cd "$SKILLS_DIR/$skill"
+            find . -type f | while read f; do
+                if [ ! -f "$REPO_DIR/$skill/$f" ]; then
+                    rm -f "$f"
+                    echo "  🗑️ 清理已删除: $skill/$f"
+                fi
+            done
+            cd "$REPO_DIR"
+        fi
         cp -r "$REPO_DIR/$skill" "$SKILLS_DIR/"
         echo "✓ $skill"
     fi
@@ -37,6 +49,17 @@ if [ "$1" = "--plugins" ]; then
     fi
 
     mkdir -p "$PLUGINS_DIR"
+    # 同步删除：清理目标里仓库已删除的文件（cp -r 只加不删的盲区）
+    if [ -d "$PLUGINS_DIR/config-advisor" ]; then
+        cd "$PLUGINS_DIR/config-advisor"
+        find . -type f | while read f; do
+            if [ ! -f "$REPO_DIR/config-advisor/$f" ]; then
+                rm -f "$f"
+                echo "  🗑️ 清理已删除: config-advisor/$f"
+            fi
+        done
+        cd "$REPO_DIR"
+    fi
     cp -r "$REPO_DIR/config-advisor" "$PLUGINS_DIR/"
     echo "✓ config-advisor (plugin)"
 
