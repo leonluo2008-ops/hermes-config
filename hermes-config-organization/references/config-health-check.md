@@ -10,12 +10,12 @@
 | # | 检查项 | 命令 | 不健康阈值 | 依据 |
 |---|---|---|---|---|
 | 1 | SOUL.md 存在 | `test -f ~/.hermes/SOUL.md` | 不存在 → Hermes 回退默认身份 | [PER] |
-| 2 | SOUL.md 字数 | `wc -c ~/.hermes/SOUL.md` | >2000 → 通常塞了 workflow | [PER] |
+| 2 | SOUL.md 字数 | `wc -m ~/.hermes/SOUL.md` | >2000 → 通常塞了 workflow | [PER] |
 | 3 | ~/.hermes.md 存在 | `test -f ~/.hermes.md` | 不存在 → 无全局兜底 | [CF] |
-| 4 | ~/.hermes.md 字数 | `wc -c ~/.hermes.md` | >6000 → 接近 20K 截断上限 | [CF] |
+| 4 | ~/.hermes.md 字数 | `wc -m ~/.hermes.md` | >6000 → 接近 20K 截断上限 | [CF] |
 | 5 | git 项目有 .hermes.md | `test -f $(git rev-parse --show-toplevel 2>/dev/null)/.hermes.md` | 缺失 → 全局规则不可见（git root 硬停）| [CF] |
-| 6 | MEMORY.md 容量 | `wc -c ~/.hermes/memories/MEMORY.md` | >1760 (80%) → 接近报错上限 | [MEM] |
-| 7 | USER.md 容量 | `wc -c ~/.hermes/memories/USER.md` | >1100 (80%) → 同上 | [MEM] |
+| 6 | MEMORY.md 容量 | `wc -m ~/.hermes/memories/MEMORY.md` | >1760 (80%) → 接近报错上限 | [MEM] |
+| 7 | USER.md 容量 | `wc -m ~/.hermes/memories/USER.md` | >1100 (80%) → 同上 | [MEM] |
 
 ### 阈值依据
 
@@ -34,7 +34,7 @@ REPORT=""
 
 # 1. SOUL.md
 if [[ -f "$HOME_DIR/SOUL.md" ]]; then
-  soul_size=$(wc -c < "$HOME_DIR/SOUL.md")
+  soul_size=$(wc -m < "$HOME_DIR/SOUL.md")
   if (( soul_size > 2000 )); then
     REPORT+="⚠️ SOUL.md (${soul_size} 字符) — 超过 2000，建议精简（workflow 移到 .hermes.md）\n"
   else
@@ -46,7 +46,7 @@ fi
 
 # 2. ~/.hermes.md
 if [[ -f "$HOME/.hermes.md" ]]; then
-  hermes_size=$(wc -c < "$HOME/.hermes.md")
+  hermes_size=$(wc -m < "$HOME/.hermes.md")
   if (( hermes_size > 6000 )); then
     REPORT+="⚠️ ~/.hermes.md (${hermes_size} 字符) — 超过 6000，建议拆到 skill\n"
   else
@@ -69,7 +69,7 @@ fi
 
 # 4. MEMORY.md
 if [[ -f "$HOME_DIR/memories/MEMORY.md" ]]; then
-  mem_size=$(wc -c < "$HOME_DIR/memories/MEMORY.md")
+  mem_size=$(wc -m < "$HOME_DIR/memories/MEMORY.md")
   if (( mem_size > 1760 )); then
     REPORT+="⚠️ MEMORY.md (${mem_size}/2200, $(( mem_size * 100 / 2200 ))%) — 接近上限\n"
     REPORT+="  → 建议整理旧条目或晋升到 .hermes.md\n"
@@ -80,7 +80,7 @@ fi
 
 # 5. USER.md
 if [[ -f "$HOME_DIR/memories/USER.md" ]]; then
-  user_size=$(wc -c < "$HOME_DIR/memories/USER.md")
+  user_size=$(wc -m < "$HOME_DIR/memories/USER.md")
   if (( user_size > 1100 )); then
     REPORT+="⚠️ USER.md (${user_size}/1375, $(( user_size * 100 / 1375 ))%) — 接近上限\n"
   else

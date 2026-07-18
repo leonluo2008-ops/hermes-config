@@ -33,8 +33,9 @@ def _get_hermes_home() -> Path:
 
 
 def _file_size(path: Path) -> int:
+    """Return character count (not bytes). Fallback to -1 on error."""
     try:
-        return path.stat().st_size
+        return len(path.read_text(encoding="utf-8", errors="replace"))
     except OSError:
         return -1
 
