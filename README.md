@@ -19,12 +19,12 @@ Hermes Agent 配置管理套件 — 2 个配套 skill，规范 SOUL.md / .hermes
 
 | 角色 | 路径 | 说明 |
 |------|------|------|
-| **开发仓库**（改代码的地方） | `~/Github/hermes-config/` | git repo，remote = `leonluo2008-ops/hermes-config`（`git remote -v` 验证）|
+| **开发仓库**（改代码的地方） | `<your-repo-dir>/hermes-config/` | git repo，remote = `leonluo2008-ops/hermes-config`（`git remote -v` 验证）|
 | **运行目录**（Hermes 实际加载） | `~/.hermes/skills/*` + `~/.hermes/plugins/config-advisor` | `install.sh` 复制过去的 |
 | **安装方式** | `install.sh` 用 `cp -r`（L25, L46） | 复制，非软链 |
 
 **正确流程**（三步，缺一不可）：
-1. 在 `~/Github/hermes-config/` 改代码 → `git commit && git push`
+1. 在 `<your-repo-dir>/hermes-config/` 改代码 → `git commit && git push`
 2. `./install.sh` 或 `cp -r config-advisor/ ~/.hermes/plugins/`（skill 同理）同步到运行目录
 3. 外部终端 `hermes gateway restart` 才生效（`hermes gateway --help` 确认 restart 子命令存在）
 
@@ -32,7 +32,7 @@ Hermes Agent 配置管理套件 — 2 个配套 skill，规范 SOUL.md / .hermes
 
 **验证两边一致**：
 ```bash
-diff ~/Github/hermes-config/config-advisor/health_check.py ~/.hermes/plugins/config-advisor/health_check.py
+diff <your-repo-dir>/hermes-config/config-advisor/health_check.py ~/.hermes/plugins/config-advisor/health_check.py
 # 无输出 = 一致
 ```
 
@@ -46,6 +46,14 @@ diff ~/Github/hermes-config/config-advisor/health_check.py ~/.hermes/plugins/con
 
 - **打包 / 安装通用** ✅ — 标准 SKILL.md，装哪儿都能被识别加载。
 - **内容适用范围** — 这两个 skill 的*知识本身*是讲 **Hermes 的配置文件**（SOUL.md / .hermes.md / MEMORY.md 是 Hermes 专有概念）。装进 Claude Code 等系统也能加载，但只有当你用该系统**管理一个 Hermes 实例**时才真正有用；它不会自动变成"通用配置规范"。
+
+## 前置要求
+
+- **Hermes Agent**（如需启用 config-advisor 插件）
+- **Python 3.11+**（plugin 运行时）
+- **httpx**（config-advisor 复盘报告 LLM 调用用）—— Hermes 自带的 venv 已包含（`~/.hermes/hermes-agent/venv/`），**无需单独安装**。仅在独立测试或非 Hermes 环境用时，参考 `config-advisor/requirements.txt`
+- 一个支持 agentskills.io 标准 SKILL.md 的 agent 系统（Claude Code / OpenClaw / Cursor / Trae / Hermes…）
+- 若用于管理 Hermes：建议全局 `~/.hermes.md` 已建立（见 `hermes-config-organization` 的全局配置段）
 
 ## 安装
 
@@ -100,11 +108,6 @@ ls "$SKILLS_DIR"/hermes-md-init/SKILL.md
 cd hermes-config && git pull
 cp -r hermes-config-organization hermes-md-init "$SKILLS_DIR"/
 ```
-
-## 前置要求
-
-- 一个支持 agentskills.io 标准 SKILL.md 的 agent 系统（Claude Code / OpenClaw / Cursor / Trae / Hermes…）。
-- 若用于管理 Hermes：建议全局 `~/.hermes.md` 已建立（见 `hermes-config-organization` 的全局配置段）。
 
 ## 背景
 
