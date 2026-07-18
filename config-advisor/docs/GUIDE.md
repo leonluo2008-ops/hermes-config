@@ -148,7 +148,7 @@ PYTHONPATH=~/.hermes/plugins/config-advisor python3 -c \
 ### 前置条件
 
 - Hermes Agent（需支持 plugin hooks）
-- `httpx`：`pip install httpx`（复盘报告 LLM 调用用）
+- `httpx`（复盘报告 LLM 调用用）—— **Hermes 自带 venv 已包含**（`~/.hermes/hermes-agent/venv/`），无需单独安装。仅独立测试时按 `requirements.txt` 装
 - 一个 LLM API 密钥（GLM / MiniMax / Juxin 任选，用于复盘报告）
 
 ### 一键安装

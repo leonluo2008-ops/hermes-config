@@ -30,12 +30,6 @@ done
 # ── 2. 安装插件（显式 opt-in） ─────────────────────────────
 
 if [ "$1" = "--plugins" ]; then
-    if [ ! -d "$REPO_DIR/config-advisor" ]; then
-        echo "⚠️  config-advisor 插件尚未发布（当前版本只含 skills）"
-        echo "    插件开发中，后续版本会包含。"
-        exit 0
-    fi
-
     # 检查 skill 是否已安装
     if [ ! -f "$SKILLS_DIR/hermes-config-organization/SKILL.md" ]; then
         echo "❌ 需要先安装 hermes-config-organization skill"
@@ -46,7 +40,6 @@ if [ "$1" = "--plugins" ]; then
     cp -r "$REPO_DIR/config-advisor" "$PLUGINS_DIR/"
     echo "✓ config-advisor (plugin)"
 
-    # 用 Python yaml 库安全修改 config.yaml（不用 sed）
     echo ""
     echo "⚠️  插件已安装，需手动启用："
     echo "    在 config.yaml 的 plugins.enabled 列表添加 'config-advisor'"
@@ -54,8 +47,8 @@ if [ "$1" = "--plugins" ]; then
     echo ""
     echo "    或用 Python 安全编辑："
     echo '    python3 -c "'
-    echo "    import yaml"
-    echo "    p = '$HOME/.hermes/config.yaml'"
+    echo "    import os, yaml"
+    echo "    p = os.path.expanduser('~/.hermes/config.yaml')"
     echo "    with open(p) as f: c = yaml.safe_load(f)"
     echo "    e = c.setdefault('plugins', {}).setdefault('enabled', [])"
     echo "    if 'config-advisor' not in e: e.append('config-advisor')"

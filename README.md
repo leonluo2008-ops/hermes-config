@@ -47,6 +47,14 @@ diff <your-repo-dir>/hermes-config/config-advisor/health_check.py ~/.hermes/plug
 - **打包 / 安装通用** ✅ — 标准 SKILL.md，装哪儿都能被识别加载。
 - **内容适用范围** — 这两个 skill 的*知识本身*是讲 **Hermes 的配置文件**（SOUL.md / .hermes.md / MEMORY.md 是 Hermes 专有概念）。装进 Claude Code 等系统也能加载，但只有当你用该系统**管理一个 Hermes 实例**时才真正有用；它不会自动变成"通用配置规范"。
 
+## 前置要求
+
+- **Hermes Agent**（如需启用 config-advisor 插件）
+- **Python 3.11+**（plugin 运行时）
+- **httpx**（config-advisor 复盘报告 LLM 调用用）—— Hermes 自带的 venv 已包含（`~/.hermes/hermes-agent/venv/`），**无需单独安装**。仅在独立测试或非 Hermes 环境用时，参考 `config-advisor/requirements.txt`
+- 一个支持 agentskills.io 标准 SKILL.md 的 agent 系统（Claude Code / OpenClaw / Cursor / Trae / Hermes…）
+- 若用于管理 Hermes：建议全局 `~/.hermes.md` 已建立（见 `hermes-config-organization` 的全局配置段）
+
 ## 安装
 
 ### 一键安装（推荐）
@@ -100,11 +108,6 @@ ls "$SKILLS_DIR"/hermes-md-init/SKILL.md
 cd hermes-config && git pull
 cp -r hermes-config-organization hermes-md-init "$SKILLS_DIR"/
 ```
-
-## 前置要求
-
-- 一个支持 agentskills.io 标准 SKILL.md 的 agent 系统（Claude Code / OpenClaw / Cursor / Trae / Hermes…）。
-- 若用于管理 Hermes：建议全局 `~/.hermes.md` 已建立（见 `hermes-config-organization` 的全局配置段）。
 
 ## 背景
 
