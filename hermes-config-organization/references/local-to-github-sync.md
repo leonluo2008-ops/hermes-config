@@ -1,6 +1,6 @@
 # Skill 本地 → GitHub 同步工作流
 
-> 适用于 `~/.hermes/skills/` 中的 skill 有对应 `~/Github/` 镜像仓库的场景（如 `hermes-config` suite）。
+> 适用于 `~/.hermes/skills/` 中的 skill 有对应镜像仓库的场景（如 `hermes-config` suite）。`<your-repo-dir>` 是你本地的仓库 clone 位置（如 `~/code/`、`~/projects/`，因人而异）。
 
 ## 同步流程
 
@@ -8,20 +8,20 @@
 
 ```bash
 # 检查本地 skill 是否有对应的 GitHub 仓库
-ls ~/Github/<repo-name>/  # 对应 ~/.hermes/skills/<skill-name>/
+ls <your-repo-dir>/<repo-name>/  # 对应 ~/.hermes/skills/<skill-name>/
 ```
 
 已知对应关系：
-- `~/.hermes/skills/hermes-config-organization/` + `~/.hermes/skills/hermes-md-init/` → `~/Github/hermes-config/`（仓库 `leonluo2008-ops/hermes-config`）
+- `~/.hermes/skills/hermes-config-organization/` + `~/.hermes/skills/hermes-md-init/` → `<your-repo-dir>/hermes-config/`（仓库 `leonluo2008-ops/hermes-config`）
 
 ### 2. 从本地 skill 同步到 GitHub 仓库
 
 ```bash
 # cp 本地最新版到镜像仓库（不软链——用户偏好实体副本）
-cp -r ~/.hermes/skills/<skill-name>/SKILL.md ~/Github/<repo-name>/<skill-name>/SKILL.md
+cp -r ~/.hermes/skills/<skill-name>/SKILL.md <your-repo-dir>/<repo-name>/<skill-name>/SKILL.md
 # 如有 templates/references 子目录也要同步
-mkdir -p ~/Github/<repo-name>/<skill-name>/templates
-cp ~/.hermes/skills/<skill-name>/templates/*.md ~/Github/<repo-name>/<skill-name>/templates/
+mkdir -p <your-repo-dir>/<repo-name>/<skill-name>/templates
+cp ~/.hermes/skills/<skill-name>/templates/*.md <your-repo-dir>/<repo-name>/<skill-name>/templates/
 ```
 
 ### 3. 处理 rebase 冲突
@@ -29,7 +29,7 @@ cp ~/.hermes/skills/<skill-name>/templates/*.md ~/Github/<repo-name>/<skill-name
 远程可能有其他机器/PR 推送的改动（如通用化安装说明）。本地 skill 是权威版本（最新内容），但 README 可能需要保留远程的通用化改动。
 
 ```bash
-cd ~/Github/<repo-name>
+cd <your-repo-dir>/<repo-name>
 https_proxy=http://127.0.0.1:7897 git pull --rebase
 # 冲突时：SKILL.md 直接用本地版本覆盖（cp），README 手工合并
 cp ~/.hermes/skills/<skill-name>/SKILL.md <skill-name>/SKILL.md
